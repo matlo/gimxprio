@@ -7,6 +7,9 @@
 #include <windows.h>
 #include <stdio.h>
 #include <gimxcommon/include/gerror.h>
+#include <gimxlog/include/glog.h>
+
+GLOG_INST(GLOG_NAME)
 
 int gprio() {
 

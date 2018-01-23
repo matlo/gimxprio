@@ -5,6 +5,10 @@
 
 #include <sched.h>
 #include <stdio.h>
+#include <gimxcommon/include/gerror.h>
+#include <gimxlog/include/glog.h>
+
+GLOG_INST(GLOG_NAME)
 
 int gprio()
 {
@@ -16,7 +20,7 @@ int gprio()
 
   if( sched_setscheduler(0, SCHED_FIFO, &p) < 0 )
   {
-    perror("sched_setscheduler");
+    PRINT_ERROR_ERRNO("sched_setscheduler")
     return -1;
   }
   return 0;
