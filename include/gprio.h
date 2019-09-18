@@ -9,6 +9,11 @@
 /*
  * Adjust OS-specific settings to increase both thread priority and scheduling.
  */
-int gprio();
+int gprio_init();
+
+/*
+ * Restore the settings changed by gprio_init.
+ */
+int gprio_clean();
 
 #endif /* GPRIO_H_ */
