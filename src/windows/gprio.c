@@ -100,19 +100,19 @@ static int restoreprocess(struct processinfo * info) {
             }
 
             if (SetProcessAffinityMask (info->handle, processmask) == 0) {
-                PRINT_ERROR_GETLASTERROR("SetProcessAffinityMask ")
+                PRINT_ERROR_GETLASTERROR("SetProcessAffinityMask")
             }
-
-            CloseHandle(info->handle);
 
         } else if (GetLastError() != ERROR_INVALID_HANDLE) {
             PRINT_ERROR_GETLASTERROR("GetProcessAffinityMask")
         }
     }
 
-    free(info);
+    CloseHandle(info->handle);
 
     GLIST_REMOVE(processinfos, info)
+
+    free(info);
 
     return 1;
 }
@@ -148,19 +148,19 @@ static int restorethread(struct threadinfo * info) {
             }
 
             if (SetThreadAffinityMask(info->handle, threadAffinity) == 0) {
-                PRINT_ERROR_GETLASTERROR("SetProcessAffinityMask ")
+                PRINT_ERROR_GETLASTERROR("SetThreadAffinityMask")
             }
 
-            CloseHandle(info->handle);
-
         } else if (GetLastError() != ERROR_INVALID_HANDLE) {
-            PRINT_ERROR_GETLASTERROR("GetProcessAffinityMask")
+            PRINT_ERROR_GETLASTERROR("GetThreadAffinityMask")
         }
     }
 
-    free(info);
+    CloseHandle(info->handle);
 
     GLIST_REMOVE(threadinfos, info)
+
+    free(info);
 
     return 1;
 }
@@ -238,7 +238,7 @@ int selectcore(DWORD_PTR mask, int highest) {
 
     int j;
     for (j = 1; j <= highest; ++j) {
-        if ((mask & (1 << j)) &&score[j] <= min) {
+        if ((mask & (1 << j)) && score[j] <= min) {
             core = j;
         }
     }
@@ -274,6 +274,7 @@ static void cleanprocesses() {
             struct processinfo * prev = process->prev;
             CloseHandle(process->handle);
             GLIST_REMOVE(processinfos, process)
+            free(process);
             process = prev;
         }
     }
@@ -336,8 +337,12 @@ static void getprocessinfo() {
 }
 
 /*
- * Unset affinities to specified core for all processes except the current one and its parent.
- * Not setting parent process can help recovering affinities after a crash,
+ * Unset affinities to specified core for all processes except:
+ * - the current one
+ * - its parent
+ * - processes that have specific thread affinities
+ *
+ * Not changing parent process can help recovering affinities after a crash,
  * and parent process is probably just waiting for our termination.
  */
 static void unsetprocessaffinities(unsigned int core) {
@@ -359,10 +364,10 @@ static void unsetprocessaffinities(unsigned int core) {
 
         DWORD_PTR affinitymask = process->affinitymask & ~(1 << core);
 
-        if (affinitymask != process->affinitymask) {
+        if (affinitymask != 0 && affinitymask != process->affinitymask) {
 
             if (SetProcessAffinityMask (process->handle, affinitymask) == 0) {
-                PRINT_ERROR_GETLASTERROR("SetProcessAffinityMask ")
+                PRINT_ERROR_GETLASTERROR("SetProcessAffinityMask")
                 continue;
             }
 
@@ -386,6 +391,7 @@ static void cleanthreads() {
             struct threadinfo * prev = thread->prev;
             CloseHandle(thread->handle);
             GLIST_REMOVE(threadinfos, thread)
+            free(thread);
             thread = prev;
         }
     }
@@ -525,6 +531,8 @@ void gprio_clean() {
     }
 
     if (state.affinitymask != 0) {
+
+        // Restore thread affinity to process affinity.
 
         DWORD_PTR process = 0, system = 0;
         if (GetProcessAffinityMask(GetCurrentProcess(), &process, &system) == 0) {
