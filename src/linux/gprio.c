@@ -16,6 +16,27 @@ static struct {
     struct sched_param param;
 } state = { .clients = 0, .policy = -1 };
 
+void gprio_clean() {
+
+    --state.clients;
+
+    if (state.clients > 0) {
+        return;
+    }
+
+    if (state.policy == -1) {
+        return;
+    }
+
+    // Restore settings.
+
+    if (sched_setscheduler(0, state.policy, &state.param) < 0) {
+        PRINT_ERROR_ERRNO("sched_setscheduler")
+    }
+
+    state.policy = -1;
+}
+
 int gprio_init() {
 
     ++state.clients;
@@ -49,25 +70,4 @@ int gprio_init() {
     }
 
     return 0;
-}
-
-void gprio_clean() {
-
-    --state.clients;
-
-    if (state.clients > 0) {
-        return;
-    }
-
-    if (state.policy == -1) {
-        return;
-    }
-
-    // Restore settings.
-
-    if (sched_setscheduler(0, state.policy, &state.param) < 0) {
-        PRINT_ERROR_ERRNO("sched_setscheduler")
-    }
-
-    state.policy = -1;
 }
