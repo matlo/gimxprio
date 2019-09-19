@@ -12,9 +12,9 @@ GLOG_INST( GLOG_NAME)
 
 static struct {
     int clients; // keep track of how many clients called gprio_init without calling gprio_end
-    int policy = -1;
+    int policy;
     struct sched_param param;
-} state = {};
+} state = { .clients = 0, .policy = -1 };
 
 int gprio_init() {
 
@@ -33,7 +33,7 @@ int gprio_init() {
     }
 
     state.policy = sched_getscheduler(0);
-    if (policy == -1) {
+    if (state.policy == -1) {
         PRINT_ERROR_ERRNO("sched_getscheduler")
         gprio_clean();
         return -1;
@@ -68,4 +68,6 @@ void gprio_clean() {
     if (sched_setscheduler(0, state.policy, &state.param) < 0) {
         PRINT_ERROR_ERRNO("sched_setscheduler")
     }
+
+    state.policy = -1;
 }
