@@ -46,13 +46,13 @@ void dllimport(void) {
 
     HMODULE hNtdll = GetModuleHandle("ntdll.dll");
     if (hNtdll == INVALID_HANDLE_VALUE) {
-        PRINT_ERROR_GETLASTERROR("GetModuleHandle ntdll.dll")
+        PRINT_ERROR_GETLASTERROR("GetModuleHandle ntdll.dll");
         exit(-1);
     }
     pNtQueryInformationThread = (LONG (__stdcall *)(HANDLE, LONG, PVOID, ULONG, PULONG)) GetProcAddress(hNtdll,
             "NtQueryInformationThread");
     if (pNtQueryInformationThread == NULL) {
-        PRINT_ERROR_GETLASTERROR("GetProcAddress NtQueryInformationThread")
+        PRINT_ERROR_GETLASTERROR("GetProcAddress NtQueryInformationThread");
         exit(-1);
     }
 }
@@ -100,11 +100,11 @@ static int restoreprocess(struct processinfo * info) {
             }
 
             if (SetProcessAffinityMask (info->handle, processmask) == 0) {
-                PRINT_ERROR_GETLASTERROR("SetProcessAffinityMask")
+                PRINT_ERROR_GETLASTERROR("SetProcessAffinityMask");
             }
 
         } else if (GetLastError() != ERROR_INVALID_HANDLE) {
-            PRINT_ERROR_GETLASTERROR("GetProcessAffinityMask")
+            PRINT_ERROR_GETLASTERROR("GetProcessAffinityMask");
         }
     }
 
@@ -148,11 +148,11 @@ static int restorethread(struct threadinfo * info) {
             }
 
             if (SetThreadAffinityMask(info->handle, threadAffinity) == 0) {
-                PRINT_ERROR_GETLASTERROR("SetThreadAffinityMask")
+                PRINT_ERROR_GETLASTERROR("SetThreadAffinityMask");
             }
 
         } else if (GetLastError() != ERROR_INVALID_HANDLE) {
-            PRINT_ERROR_GETLASTERROR("GetThreadAffinityMask")
+            PRINT_ERROR_GETLASTERROR("GetThreadAffinityMask");
         }
     }
 
@@ -181,11 +181,11 @@ int iselevated() {
     PSID group;
     if (AllocateAndInitializeSid(&authority, 2, SECURITY_BUILTIN_DOMAIN_RID,
             DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &group) == 0) {
-        PRINT_ERROR_GETLASTERROR("AllocateAndInitializeSid")
+        PRINT_ERROR_GETLASTERROR("AllocateAndInitializeSid");
     } else {
         BOOL ismember = FALSE;
         if (CheckTokenMembership(NULL, group, &ismember) == 0) {
-            PRINT_ERROR_GETLASTERROR("CheckTokenMembership")
+            PRINT_ERROR_GETLASTERROR("CheckTokenMembership");
         } else {
             ret = (ismember == TRUE);
         }
@@ -287,13 +287,13 @@ static void getprocessinfo() {
 
     HANDLE processes = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (processes == INVALID_HANDLE_VALUE) {
-        PRINT_ERROR_GETLASTERROR("CreateToolhelp32Snapshot")
+        PRINT_ERROR_GETLASTERROR("CreateToolhelp32Snapshot");
         return;
     }
 
     PROCESSENTRY32 entry = { .dwSize = sizeof(entry) };
     if (!Process32First(processes, &entry)) {
-        PRINT_ERROR_GETLASTERROR("Process32First")
+        PRINT_ERROR_GETLASTERROR("Process32First");
         CloseHandle(processes);
         return;
     }
@@ -306,13 +306,13 @@ static void getprocessinfo() {
 
         HANDLE hprocess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_SET_INFORMATION, FALSE, entry.th32ProcessID);
         if (hprocess == INVALID_HANDLE_VALUE) {
-            PRINT_ERROR_GETLASTERROR("OpenProcess")
+            PRINT_ERROR_GETLASTERROR("OpenProcess");
             continue;
         }
         DWORD_PTR processmask, systemmask;
         if (GetProcessAffinityMask(hprocess, &processmask, &systemmask) == 0) {
             if (GetLastError() != ERROR_INVALID_HANDLE) {
-                PRINT_ERROR_GETLASTERROR("GetProcessAffinityMask")
+                PRINT_ERROR_GETLASTERROR("GetProcessAffinityMask");
             }
             CloseHandle(hprocess);
             continue;
@@ -320,7 +320,7 @@ static void getprocessinfo() {
 
         struct processinfo * info = malloc(sizeof(*info));
         if (info == NULL) {
-            PRINT_ERROR_ALLOC_FAILED("malloc")
+            PRINT_ERROR_ALLOC_FAILED("malloc");
             CloseHandle(hprocess);
             continue;
         }
@@ -367,7 +367,7 @@ static void unsetprocessaffinities(unsigned int core) {
         if (affinitymask != 0 && affinitymask != process->affinitymask) {
 
             if (SetProcessAffinityMask (process->handle, affinitymask) == 0) {
-                PRINT_ERROR_GETLASTERROR("SetProcessAffinityMask")
+                PRINT_ERROR_GETLASTERROR("SetProcessAffinityMask");
                 continue;
             }
 
@@ -404,13 +404,13 @@ static void getthreadinfo() {
 
     HANDLE threads = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     if (threads == INVALID_HANDLE_VALUE) {
-        PRINT_ERROR_GETLASTERROR("CreateToolhelp32Snapshot")
+        PRINT_ERROR_GETLASTERROR("CreateToolhelp32Snapshot");
         return;
     }
 
     THREADENTRY32 entry = { .dwSize = sizeof(entry) };
     if (!Thread32First(threads, &entry)) {
-        PRINT_ERROR_GETLASTERROR("Thread32First")
+        PRINT_ERROR_GETLASTERROR("Thread32First");
         CloseHandle(threads);
         return;
     }
@@ -419,7 +419,7 @@ static void getthreadinfo() {
 
         HANDLE thread = OpenThread(THREAD_QUERY_INFORMATION | THREAD_SET_INFORMATION, FALSE, entry.th32ThreadID);
         if (thread == INVALID_HANDLE_VALUE) {
-            PRINT_ERROR_GETLASTERROR("OpenThread")
+            PRINT_ERROR_GETLASTERROR("OpenThread");
             continue;
         }
 
@@ -432,7 +432,7 @@ static void getthreadinfo() {
 
         struct threadinfo * info = malloc(sizeof(*info));
         if (info == NULL) {
-            PRINT_ERROR_ALLOC_FAILED("malloc")
+            PRINT_ERROR_ALLOC_FAILED("malloc");
             CloseHandle(thread);
             continue;
         }
@@ -468,7 +468,7 @@ static void unsetthreadaffinities(unsigned int core) {
         }
 
         if (SetThreadAffinityMask(thread->handle, threadAffinity) == 0) {
-            PRINT_ERROR_GETLASTERROR("SetThreadAffinityMask")
+            PRINT_ERROR_GETLASTERROR("SetThreadAffinityMask");
             continue;
         }
 
@@ -489,7 +489,7 @@ int sethighestpriorityclass() {
     }
 
     if (!SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS)) {
-        PRINT_ERROR_GETLASTERROR("SetPriorityClass")
+        PRINT_ERROR_GETLASTERROR("SetPriorityClass");
         return -1;
     }
 
@@ -506,7 +506,7 @@ int sethighestpriority() {
     }
 
     if (!SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL)) {
-        PRINT_ERROR_GETLASTERROR("SetThreadPriority")
+        PRINT_ERROR_GETLASTERROR("SetThreadPriority");
         return -1;
     }
 
@@ -536,7 +536,7 @@ void gprio_clean() {
 
         DWORD_PTR process = 0, system = 0;
         if (GetProcessAffinityMask(GetCurrentProcess(), &process, &system) == 0) {
-            PRINT_ERROR_GETLASTERROR("GetProcessAffinityMask")
+            PRINT_ERROR_GETLASTERROR("GetProcessAffinityMask");
         }
 
         if (GLOG_LEVEL(GLOG_NAME,DEBUG)) {
@@ -544,7 +544,7 @@ void gprio_clean() {
         }
 
         if (SetThreadAffinityMask(GetCurrentThread(), process) == 0) {
-            PRINT_ERROR_GETLASTERROR("SetThreadAffinityMask")
+            PRINT_ERROR_GETLASTERROR("SetThreadAffinityMask");
         }
 
         state.affinitymask = 0;
@@ -564,7 +564,7 @@ int gprio_init() {
 
     DWORD_PTR processmask = 0, systemmask = 0;
     if (GetProcessAffinityMask(GetCurrentProcess(), &processmask, &systemmask) == 0) {
-        PRINT_ERROR_GETLASTERROR("GetProcessAffinityMask")
+        PRINT_ERROR_GETLASTERROR("GetProcessAffinityMask");
         gprio_clean();
         return -1;
     }
@@ -610,7 +610,7 @@ int gprio_init() {
 
             state.affinitymask = SetThreadAffinityMask(GetCurrentThread(), (1 << core));
             if (state.affinitymask == 0) {
-                PRINT_ERROR_GETLASTERROR("SetThreadAffinityMask")
+                PRINT_ERROR_GETLASTERROR("SetThreadAffinityMask");
                 gprio_clean();
                 return -1;
             }

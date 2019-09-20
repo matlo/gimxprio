@@ -31,7 +31,7 @@ void gprio_clean() {
     // Restore settings.
 
     if (sched_setscheduler(0, state.policy, &state.param) < 0) {
-        PRINT_ERROR_ERRNO("sched_setscheduler")
+        PRINT_ERROR_ERRNO("sched_setscheduler");
     }
 
     state.policy = -1;
@@ -48,14 +48,14 @@ int gprio_init() {
     // Get current settings.
 
     if (sched_getparam(0, &state.param) == -1) {
-        PRINT_ERROR_ERRNO("sched_getparam")
+        PRINT_ERROR_ERRNO("sched_getparam");
         gprio_clean();
         return -1;
     }
 
     state.policy = sched_getscheduler(0);
     if (state.policy == -1) {
-        PRINT_ERROR_ERRNO("sched_getscheduler")
+        PRINT_ERROR_ERRNO("sched_getscheduler");
         gprio_clean();
         return -1;
     }
@@ -64,7 +64,7 @@ int gprio_init() {
 
     struct sched_param p = { .sched_priority = sched_get_priority_max(SCHED_FIFO) };
     if (sched_setscheduler(0, SCHED_FIFO, &p) < 0) {
-        PRINT_ERROR_ERRNO("sched_setscheduler")
+        PRINT_ERROR_ERRNO("sched_setscheduler");
         gprio_clean();
         return -1;
     }
