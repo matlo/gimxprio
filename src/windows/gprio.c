@@ -6,6 +6,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdio.h>
+#include <limits.h>
 #include <gimxcommon/include/gerror.h>
 #include <gimxlog/include/glog.h>
 #include <gimxcommon/include/glist.h>
@@ -16,7 +17,7 @@
 GLOG_INST(GLOG_NAME)
 
 static struct {
-    int clients; // keep track of how many clients called gprio_init without calling gprio_end
+    unsigned int clients; // keep track of how many clients called gprio_init without calling gprio_end
     DWORD_PTR affinitymask; // backup in gprio_init, restore in gprio_end
     unsigned int core; // the selected core, 0 means none (core 0 is never selected)
     DWORD pid; // process id
@@ -515,7 +516,9 @@ int sethighestpriority() {
 
 void gprio_clean() {
 
-    --state.clients;
+    if (state.clients > 0) {
+        --state.clients;
+    }
 
     if (state.clients > 0) {
         return;
@@ -552,6 +555,11 @@ void gprio_clean() {
 }
 
 int gprio_init() {
+
+    if (state.clients == UINT_MAX) {
+        PRINT_ERROR_OTHER("too many clients");
+        return -1;
+    }
 
     ++state.clients;
 

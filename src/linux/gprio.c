@@ -5,20 +5,24 @@
 
 #include <sched.h>
 #include <stdio.h>
+#include <limits.h>
 #include <gimxcommon/include/gerror.h>
 #include <gimxlog/include/glog.h>
 
 GLOG_INST( GLOG_NAME)
 
 static struct {
-    int clients; // keep track of how many clients called gprio_init without calling gprio_end
+    unsigned int clients; // keep track of how many clients called gprio_init without calling gprio_end
+    int nice;
     int policy;
     struct sched_param param;
 } state = { .clients = 0, .policy = -1 };
 
 void gprio_clean() {
 
-    --state.clients;
+    if (state.clients > 0) {
+        --state.clients;
+    }
 
     if (state.clients > 0) {
         return;
@@ -38,6 +42,11 @@ void gprio_clean() {
 }
 
 int gprio_init() {
+
+    if (state.clients == UINT_MAX) {
+        PRINT_ERROR_OTHER("too many clients");
+        return -1;
+    }
 
     ++state.clients;
 
