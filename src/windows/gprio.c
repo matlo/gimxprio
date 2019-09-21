@@ -50,7 +50,7 @@ void dllimport(void) {
         PRINT_ERROR_GETLASTERROR("GetModuleHandle ntdll.dll");
         exit(-1);
     }
-    pNtQueryInformationThread = (LONG (__stdcall *)(HANDLE, LONG, PVOID, ULONG, PULONG)) GetProcAddress(hNtdll,
+    pNtQueryInformationThread = (LONG (__stdcall *)(HANDLE, LONG, PVOID, ULONG, PULONG))(void (*)(void)) GetProcAddress(hNtdll,
             "NtQueryInformationThread");
     if (pNtQueryInformationThread == NULL) {
         PRINT_ERROR_GETLASTERROR("GetProcAddress NtQueryInformationThread");
