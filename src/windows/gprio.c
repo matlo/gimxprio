@@ -365,7 +365,9 @@ static void unsetprocessaffinities(unsigned int core) {
 
         DWORD_PTR affinitymask = process->affinitymask & ~(1 << core);
 
-        if (affinitymask != 0 && affinitymask != process->affinitymask) {
+        // do not check (affinitymask != process->affinitymask) to help recovering after a crash
+
+        if (affinitymask != 0) {
 
             if (SetProcessAffinityMask (process->handle, affinitymask) == 0) {
                 PRINT_ERROR_GETLASTERROR("SetProcessAffinityMask");
