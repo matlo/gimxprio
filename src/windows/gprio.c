@@ -6,6 +6,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <limits.h>
 #include <gimxcommon/include/gerror.h>
 #include <gimxlog/include/glog.h>
@@ -97,7 +98,7 @@ static int restoreprocess(struct processinfo * info) {
             processmask |= (1 << state.core);
 
             if (GLOG_LEVEL(GLOG_NAME,DEBUG)) {
-                printf("process = %lu restore affinity 0x%I64x.\n", info->pid, processmask);
+                printf("process = %lu restore affinity 0x%Ix.\n", info->pid, processmask);
             }
 
             if (SetProcessAffinityMask (info->handle, processmask) == 0) {
@@ -145,7 +146,7 @@ static int restorethread(struct threadinfo * info) {
             threadAffinity |= (1 << state.core);
 
             if (GLOG_LEVEL(GLOG_NAME,DEBUG)) {
-                printf("thread = %lu restore affinity 0x%I64x.\n", info->tid, threadAffinity);
+                printf("thread = %lu restore affinity 0x%Ix.\n", info->tid, threadAffinity);
             }
 
             if (SetThreadAffinityMask(info->handle, threadAffinity) == 0) {
@@ -282,7 +283,7 @@ static void cleanprocesses() {
 }
 
 /*
- * Get info about all running processes. Also get parent process id.
+ * Get info about all running processes. Also get our parent process id.
  */
 static void getprocessinfo() {
 
@@ -376,7 +377,7 @@ static void unsetprocessaffinities(unsigned int core) {
 
             process->set = 1;
             if (GLOG_LEVEL(GLOG_NAME,DEBUG)) {
-                printf("process = %lu set affinity 0x%I64x\n", process->pid, affinitymask);
+                printf("process = %lu set affinity 0x%Ix\n", process->pid, affinitymask);
             }
         }
     }
@@ -477,7 +478,7 @@ static void unsetthreadaffinities(unsigned int core) {
 
         thread->set = 1;
         if (GLOG_LEVEL(GLOG_NAME,DEBUG)) {
-            printf("thread id = %lu set affinity 0x%I64x\n", thread->tid, threadAffinity);
+            printf("thread id = %lu set affinity 0x%Ix\n", thread->tid, threadAffinity);
         }
     }
 }
@@ -545,7 +546,7 @@ void gprio_clean() {
         }
 
         if (GLOG_LEVEL(GLOG_NAME,DEBUG)) {
-            printf("Restore thread affinity to 0x%I64x.\n", process);
+            printf("Restore thread affinity to 0x%Ix.\n", process);
         }
 
         if (SetThreadAffinityMask(GetCurrentThread(), process) == 0) {
@@ -580,7 +581,7 @@ int gprio_init() {
     }
 
     if (GLOG_LEVEL(GLOG_NAME,DEBUG)) {
-        printf("Affinities: process = 0x%I64x, system = 0x%I64x\n", processmask, systemmask);
+        printf("Affinities: process = 0x%Ix, system = 0x%Ix\n", processmask, systemmask);
     }
 
     unsigned int corecount = 0;
