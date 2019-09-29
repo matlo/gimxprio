@@ -97,7 +97,7 @@ static int restoreprocess(struct processinfo * info) {
 
             processmask |= (1 << state.core);
 
-            if (GLOG_LEVEL(GLOG_NAME,DEBUG)) {
+            if (GLOG_LEVEL(GLOG_NAME,TRACE)) {
                 printf("process = %lu restore affinity 0x%Ix.\n", info->pid, processmask);
             }
 
@@ -376,7 +376,7 @@ static void unsetprocessaffinities(unsigned int core) {
             }
 
             process->set = 1;
-            if (GLOG_LEVEL(GLOG_NAME,DEBUG)) {
+            if (GLOG_LEVEL(GLOG_NAME,TRACE)) {
                 printf("process = %lu set affinity 0x%Ix\n", process->pid, affinitymask);
             }
         }
