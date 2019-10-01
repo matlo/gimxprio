@@ -122,7 +122,7 @@ static int restoreprocess(struct processinfo * info) {
 /*
  * This doubly linked list is used to hold process information.
  */
-GLIST_INST(struct processinfo, processinfos);
+static GLIST_INST(struct processinfo, processinfos);
 GLIST_DESTRUCTOR(processinfos, restoreprocess)
 
 struct threadinfo {
@@ -171,7 +171,7 @@ static int restorethread(struct threadinfo * info) {
 /*
  * This doubly linked list is used to hold thread information.
  */
-GLIST_INST(struct threadinfo, threadinfos);
+static GLIST_INST(struct threadinfo, threadinfos);
 GLIST_DESTRUCTOR(threadinfos, restorethread)
 
 /*
