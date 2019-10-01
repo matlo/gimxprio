@@ -82,7 +82,7 @@ struct processinfo {
     DWORD pid;
     DWORD_PTR affinitymask;
     int set;
-    GLIST_LINK(struct processinfo)
+    GLIST_LINK(struct processinfo);
 };
 
 /*
@@ -122,7 +122,8 @@ static int restoreprocess(struct processinfo * info) {
 /*
  * This doubly linked list is used to hold process information.
  */
-GLIST_INST(struct processinfo, processinfos, restoreprocess)
+GLIST_INST(struct processinfo, processinfos);
+GLIST_DESTRUCTOR(processinfos, restoreprocess)
 
 struct threadinfo {
     HANDLE handle;
@@ -130,7 +131,7 @@ struct threadinfo {
     DWORD pid;
     DWORD_PTR affinitymask;
     int set;
-    GLIST_LINK(struct threadinfo)
+    GLIST_LINK(struct threadinfo);
 };
 
 /*
@@ -170,7 +171,8 @@ static int restorethread(struct threadinfo * info) {
 /*
  * This doubly linked list is used to hold thread information.
  */
-GLIST_INST(struct threadinfo, threadinfos, restorethread)
+GLIST_INST(struct threadinfo, threadinfos);
+GLIST_DESTRUCTOR(threadinfos, restorethread)
 
 /*
  * Check if current process has elevated privileges.
