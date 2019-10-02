@@ -112,7 +112,7 @@ static int restoreprocess(struct processinfo * info) {
 
     CloseHandle(info->handle);
 
-    GLIST_REMOVE(processinfos, info)
+    GLIST_REMOVE(processinfos, info);
 
     free(info);
 
@@ -161,7 +161,7 @@ static int restorethread(struct threadinfo * info) {
 
     CloseHandle(info->handle);
 
-    GLIST_REMOVE(threadinfos, info)
+    GLIST_REMOVE(threadinfos, info);
 
     free(info);
 
@@ -277,7 +277,7 @@ static void cleanprocesses() {
         if (process->set == 0) {
             struct processinfo * prev = process->prev;
             CloseHandle(process->handle);
-            GLIST_REMOVE(processinfos, process)
+            GLIST_REMOVE(processinfos, process);
             free(process);
             process = prev;
         }
@@ -333,7 +333,7 @@ static void getprocessinfo() {
         info->pid = entry.th32ProcessID;
         info->affinitymask = processmask;
         info->set = 0;
-        GLIST_ADD(processinfos, info)
+        GLIST_ADD(processinfos, info);
 
     } while (Process32Next(processes, &entry));
 
@@ -396,7 +396,7 @@ static void cleanthreads() {
         if (thread->set == 0) {
             struct threadinfo * prev = thread->prev;
             CloseHandle(thread->handle);
-            GLIST_REMOVE(threadinfos, thread)
+            GLIST_REMOVE(threadinfos, thread);
             free(thread);
             thread = prev;
         }
@@ -448,7 +448,7 @@ static void getthreadinfo() {
         info->pid = entry.th32OwnerProcessID;
         info->affinitymask = threadAffinity;
         info->set = 0;
-        GLIST_ADD(threadinfos, info)
+        GLIST_ADD(threadinfos, info);
 
     } while (Thread32Next(threads, &entry));
 
