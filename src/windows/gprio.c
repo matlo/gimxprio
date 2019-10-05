@@ -594,10 +594,22 @@ int gprio_init() {
         printf("Available cores = %u, highest = %d\n", corecount, highestcore);
     }
 
+    int elevated = iselevated();
+
+    if (!elevated) {
+        if (GLOG_LEVEL(GLOG_NAME,INFO)) {
+            printf("Highest priority class can't be used due to missing elevation.\n");
+        }
+    } else if (corecount < 2) {
+        if (GLOG_LEVEL(GLOG_NAME,INFO)) {
+            printf("Not using highest priority class due to low core count.\n");
+        }
+    }
+
     // Never set highest priority class or change core affinities
     // if process is only allowed to run on a single core.
 
-    if (iselevated() && corecount > 1) {
+    if (elevated && corecount > 1) {
 
         if (GLOG_LEVEL(GLOG_NAME,DEBUG)) {
             printf("Thread has elevated privileges.\n");
