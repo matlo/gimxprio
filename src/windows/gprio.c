@@ -82,6 +82,7 @@ struct processinfo {
     DWORD pid;
     DWORD_PTR affinitymask;
     int set;
+    char * exefile;
     GLIST_LINK(struct processinfo);
 };
 
@@ -98,11 +99,16 @@ static int restoreprocess(struct processinfo * info) {
             processmask |= (1 << state.core);
 
             if (GLOG_LEVEL(GLOG_NAME,TRACE)) {
-                printf("process = %lu restore affinity 0x%Ix.\n", info->pid, processmask);
+                printf("process = %lu exe = %s restore affinity 0x%Ix.\n", info->pid, info->exefile, processmask);
             }
 
             if (SetProcessAffinityMask (info->handle, processmask) == 0) {
-                PRINT_ERROR_GETLASTERROR("SetProcessAffinityMask");
+                if (GetLastError() != ERROR_ACCESS_DENIED || GLOG_LEVEL(GLOG_NAME,DEBUG)) {
+                    PRINT_ERROR_GETLASTERROR("SetProcessAffinityMask");
+                    if (GLOG_LEVEL(GLOG_NAME,ERROR)) {
+                        fprintf(stderr, "process = %lu exe = %s\n", info->pid, info->exefile);
+                    }
+                }
             }
 
         } else if (GetLastError() != ERROR_INVALID_HANDLE) {
@@ -111,6 +117,8 @@ static int restoreprocess(struct processinfo * info) {
     }
 
     CloseHandle(info->handle);
+
+    free(info->exefile);
 
     GLIST_REMOVE(processinfos, info);
 
@@ -277,6 +285,7 @@ static void cleanprocesses() {
         if (process->set == 0) {
             struct processinfo * prev = process->prev;
             CloseHandle(process->handle);
+            free(process->exefile);
             GLIST_REMOVE(processinfos, process);
             free(process);
             process = prev;
@@ -333,6 +342,7 @@ static void getprocessinfo() {
         info->pid = entry.th32ProcessID;
         info->affinitymask = processmask;
         info->set = 0;
+        info->exefile = strdup(entry.szExeFile);
         GLIST_ADD(processinfos, info);
 
     } while (Process32Next(processes, &entry));
@@ -361,7 +371,7 @@ static void unsetprocessaffinities(unsigned int core) {
         if (hasspecificaffinities(process->pid, process->affinitymask)) {
 
             if (GLOG_LEVEL(GLOG_NAME,DEBUG)) {
-                printf("process = %lu has a thread with specific affinity\n", process->pid);
+                printf("process = %lu exe = %s has a thread with specific affinity\n", process->pid, process->exefile);
             }
             continue;
         }
@@ -373,13 +383,18 @@ static void unsetprocessaffinities(unsigned int core) {
         if (affinitymask != 0) {
 
             if (SetProcessAffinityMask (process->handle, affinitymask) == 0) {
-                PRINT_ERROR_GETLASTERROR("SetProcessAffinityMask");
+                if (GetLastError() != ERROR_ACCESS_DENIED || GLOG_LEVEL(GLOG_NAME,DEBUG)) {
+                    PRINT_ERROR_GETLASTERROR("SetProcessAffinityMask");
+                    if (GLOG_LEVEL(GLOG_NAME,ERROR)) {
+                        fprintf(stderr, "process = %lu exe = %s\n", process->pid, process->exefile);
+                    }
+                }
                 continue;
             }
 
             process->set = 1;
             if (GLOG_LEVEL(GLOG_NAME,TRACE)) {
-                printf("process = %lu set affinity 0x%Ix\n", process->pid, affinitymask);
+                printf("process = %lu exe = %s set affinity 0x%Ix\n", process->pid, process->exefile, affinitymask);
             }
         }
     }
